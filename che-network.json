@@ -1,0 +1,110 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Metadata": {},
+    "Parameters": {
+      "vpccidr": {
+          "Description": "provide cidr for my vpc",
+          "Type": "String"
+      },
+      "backsubcidr": {
+          "Description": "provide backendsubnet1 with a cidr block",
+          "Type": "String"
+      },
+      "frontsubcidr": {
+          "Description": "provide cidr for frontendsubnetcidr",
+          "Type": "String"
+      },
+      "backsubAZs": {
+          "Description": "provide AZ for backend subnet",
+          "Type": "String"
+      },
+      "frontsubAZs": {
+          "Description": "provide AZ for frontendsubnet",
+          "Type": "String"
+      },
+      "opentointernet": {
+          "Description": "provide open cidr to the world",
+          "Type": "String"
+      }
+    },
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {
+      "VpcChe": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": { "Ref": "vpccidr" },
+        "Tags": [{ "Key": "Name", "Value":  "VpcChe" }]
+      }
+    },
+    "backsub": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "backsubAZs" },
+        "VpcId": { "Ref": "VpcChe" },
+        "CidrBlock": { "Ref": "backsubcidr" },
+        "Tags": [{ "Key": "Name", "Value":  "backsub" }]
+      }
+    },
+    "frontsub": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "frontsubAZs" },
+        "VpcId": { "Ref": "VpcChe" },
+        "CidrBlock": "frontsubcidr",
+        "Tags": [{ "Key": "Name", "Value":  "frontsub" }]
+      }
+    },
+    "cheigw": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [{ "Key": "Name", "Value":  "cheigw" }]
+      }
+    },
+    "AttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": { "Ref": "VpcChe" },
+        "InternetGatewayId": { "Ref": "cheigw" }
+      }
+    },
+    "routepublic": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "VpcChe" },
+        "Tags": [{ "Key": "Name", "Value":  "routepublic" }]
+      }
+    },
+    "routeTableassociate1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": { "Ref": "frontsub" },
+        "RouteTableId": { "Ref": "routepublic" }
+      }
+    },
+    "routeprivate": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "VpcChe" },
+        "Tags": [{ "Key": "Name", "Value":  "routeprivate" }]
+      }
+    },
+    "routeTableassociate2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": { "Ref": "backsub" },
+        "RouteTableId": { "Ref": "routeprivate" }
+      }
+    },
+    "public": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": { "Ref": "routepublic" },
+        "DestinationCidrBlock": { "Ref": "opentointernet" },
+        "GatewayId": { "Ref": "cheigw" }
+      }
+    }
+  },
+    "Outputs": {}
+}
