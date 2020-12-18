@@ -1,0 +1,26 @@
+[
+ {
+ "ParameterKey": "vpccidr",
+ "ParameterValue": "10.0.0.0/16"
+  },
+ {
+ "ParameterKey": "backsubcidr",
+ "ParameterValue": "10.0.1.0/24"
+ },
+ {
+ "ParameterKey": "frontsubcidr",
+ "ParameterValue": "10.0.2.0/24"
+ },
+ {
+ "ParameterKey": "frontsubAZs",
+ "ParameterValue": "us-east-1a"
+ },
+ {
+ "ParameterKey": "backsubAZs",
+ "ParameterValue": "us-east-1b"
+},
+{
+ "ParameterKey": "opentointernet",
+ "ParameterValue": "0.0.0.0/0"
+} 
+]
