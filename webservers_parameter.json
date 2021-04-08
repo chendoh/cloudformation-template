@@ -1,0 +1,23 @@
+[
+   {
+    "ParameterKey": "Subnet1",
+    "ParameterValue": "subnet-0e3848e74634f3865"
+   },
+   {
+    "ParameterKey": "Subnet2",
+    "ParameterValue": "subnet-04cbce15542ba861b"
+   },
+   {
+    "ParameterKey": "WebserverKeyName",
+    "ParameterValue": "JJTECHMaster"
+   },
+   {
+    "ParameterKey": "WebserverInstanceType",
+    "ParameterValue": "t2.nano"
+   },
+  {
+    "ParameterKey": "WebserverAMIID",
+    "ParameterValue" : "ami-04bf6dcdc9ab498ca"
+  }
+
+]

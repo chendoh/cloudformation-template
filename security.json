@@ -1,0 +1,538 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+
+    "Description" : "Firewall rules that control the traffic for Core, BackEnd, FrontEnd and Edge subnets",
+
+    "Parameters" : {
+		"VPCId" : {
+            "Type" : "String"
+        },
+        "CountryCode" : {
+			"Type" : "String",
+            "Description" : "Abbreviation of the country's name",
+			"AllowedValues" : [ "US", "IE", "DE", "JP", "KR", "SG", "AU", "IN", "BR" ]
+		},
+		"RegionCode" : {
+			"Type" : "String",
+            "Description" : "Abbreviation of the region",
+			"AllowedValues" : [ "E1", "W1", "W2", "C1", "N1", "N2", "S1", "S2", "S1", "E1" ]
+		},
+		"Environment" : {
+			"Type" : "String",
+            "Description" : "Environemnt code"
+		}
+
+	},
+    "Resources": {
+        "FESecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupName" : { "Fn::Join" : [ "", [ "A",
+                    { "Ref" : "CountryCode" },
+                    { "Ref" : "RegionCode" },
+                    "GPOASG" ,
+                    { "Ref" : "Environment" },
+                    "APPFE"
+                ]]},
+                "GroupDescription" : "FrontEnd security group. Managed by CloudForamtion",
+                "VpcId" : {"Ref" : "VPCId"},
+                "SecurityGroupIngress" : [
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "80",
+                    "ToPort" : "80",
+                    "CidrIp" : "10.0.0.0/8",
+					"Description" : "Allow http traffic from EDGE security group of peered VPC EDGE SG where ALB/ELBs reside."
+                },
+				{
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "443",
+                    "ToPort" : "443",
+                    "CidrIp" : "10.0.0.0/8",
+					"Description" : "Allow http traffic from EDGE security group of peered VPC EDGE SG where ALB/ELBs reside."
+                },
+                {
+                    "IpProtocol" : "udp",
+                    "FromPort" : "53",
+                    "ToPort" : "53",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "DNS from WK WAN"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "53",
+                    "ToPort" : "53",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "DNS from WK WAN"
+                },
+                {
+                    "IpProtocol" : "icmp",
+                    "FromPort" : "8",
+                    "ToPort" : "-1",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "ping from WK WAN"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "3389",
+                    "ToPort" : "3389",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "RDP"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "22",
+                    "ToPort" : "22",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "SSH from WK WAN"
+                }
+                ],
+                "SecurityGroupEgress" : [],
+                "Tags" : [{"Key" : "Name", "Value" : { "Fn::Join" : [ "", [ "A",
+                    { "Ref" : "CountryCode" },
+                    { "Ref" : "RegionCode" },
+                    "GPOASG" ,
+                    { "Ref" : "Environment" },
+                    "APPFE"
+                ]]}}]
+            }
+        },
+
+        "FESelfIngress1" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "FESecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "445",
+                "ToPort": "445",
+                "Description" : "CIFS FE to FE",
+                "SourceSecurityGroupId": {
+                    "Ref": "FESecurityGroup"
+                }
+            }
+        },
+
+        "FESelfIngress2" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "FESecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1024",
+                "ToPort": "65535",
+                "Description" : "Ephemeral Ports FE to FE",
+                "SourceSecurityGroupId": {
+                    "Ref": "FESecurityGroup"
+                }
+            }
+        },
+
+        "FESelfIngress3" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "FESecurityGroup"
+                },
+                "IpProtocol": "udp",
+                "FromPort": "137",
+                "ToPort": "138",
+                "Description" : "CIFS FE to FE",
+                "SourceSecurityGroupId": {
+                    "Ref": "FESecurityGroup"
+                }
+            }
+        },
+
+        "FESelfIngress4" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "FESecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "139",
+                "ToPort": "139",
+                "Description" : "CIFS FE to FE",
+                "SourceSecurityGroupId": {
+                    "Ref": "FESecurityGroup"
+                }
+            }
+        },
+
+        "BESecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupName" : { "Fn::Join" : [ "", [ "A",
+                    { "Ref" : "CountryCode" },
+                    { "Ref" : "RegionCode" },
+                    "GPOASG" ,
+                    { "Ref" : "Environment" },
+                    "APPBE"
+                ]]},
+                "GroupDescription" : "BackEnd security group. Managed by CloudForamtion",
+                "VpcId" : {"Ref" : "VPCId"},
+                "SecurityGroupIngress" : [
+
+                 {
+                    "IpProtocol" : "udp",
+                    "FromPort" : "53",
+                    "ToPort" : "53",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "DNS from WK WAN"
+                 },
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "3389",
+                    "ToPort" : "3389",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "RDP"
+                 },
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "1024",
+                    "ToPort" : "65535",
+                    "CidrIp" : "10.0.0.0/8",
+					"Description" : "Allow http traffic from F5 security group of peered VPC"
+                },
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "53",
+                    "ToPort" : "53",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "DNS from WK WAN"
+                 },
+
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "80",
+                    "ToPort" : "80",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "Contractor VPN to 80"
+                 },
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "80",
+                    "ToPort" : "80",
+                    "CidrIp" : "10.205.31.0/24",
+                    "Description" : "Contractor VPN to 80"
+                 },
+
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "443",
+                    "ToPort" : "443",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "Contractor VPN to 443"
+                 },
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "443",
+                    "ToPort" : "443",
+                    "CidrIp" : "10.205.31.0/24",
+                    "Description" : "Contractor VPN to 443"
+                 },
+
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "22",
+                    "ToPort" : "22",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "SSH from WK WAN"
+                 },
+                 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "5986",
+                    "ToPort" : "5986",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "Required Port for app"
+                 }
+                ],
+                "SecurityGroupEgress" : [],
+                "Tags" : [{"Key" : "Name", "Value" : { "Fn::Join" : [ "", [ "A",
+                    { "Ref" : "CountryCode" },
+                    { "Ref" : "RegionCode" },
+                    "GPOASG" ,
+                    { "Ref" : "Environment" },
+                    "APPBE"
+                ]]}}]
+            }
+        },
+
+        "BESelfIngress1" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "BESecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "445",
+                "ToPort": "445",
+                "Description" : "CIFS BE to BE",
+                "SourceSecurityGroupId": {
+                    "Ref": "BESecurityGroup"
+                }
+            }
+        },
+
+        "BESelfIngress2" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "BESecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1024",
+                "ToPort": "65535",
+                "Description" : "Ephemeral Ports BE to BE",
+                "SourceSecurityGroupId": {
+                    "Ref": "BESecurityGroup"
+                }
+            }
+        },
+
+        "CORESecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupName" : { "Fn::Join" : [ "", [ "A",
+                    { "Ref" : "CountryCode" },
+                    { "Ref" : "RegionCode" },
+                    "GPOASG" ,
+                    { "Ref" : "Environment" },
+                    "APPCORE"
+                ]]},
+                "GroupDescription" : "Core security group. Managed by CloudForamtion",
+                "VpcId" : {"Ref" : "VPCId"},
+                "SecurityGroupIngress" : [
+
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "5986",
+                    "ToPort" : "5986",
+                    "SourceSecurityGroupId" : {"Ref" : "BESecurityGroup"},
+                    "Description" : "DNSS from WK WAN"},
+                {
+                    "IpProtocol" : "udp",
+                    "FromPort" : "53",
+                    "ToPort" : "53",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "DNS from WK WAN"
+                },
+				  {
+                    "IpProtocol" : "udp",
+                    "FromPort" : "53",
+                    "ToPort" : "53",
+                    "CidrIp" : "192.168.42.0/24",
+                    "Description" : "DNS from WK WAN"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "53",
+                    "ToPort" : "53",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "DNS from WK WAN"
+                },
+
+                {
+                    "IpProtocol" : "icmp",
+                    "FromPort" : "8",
+                    "ToPort" : "-1",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "ping from WK WAN"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "3389",
+                    "ToPort" : "3389",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "RDP"
+                },
+
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "22",
+                    "ToPort" : "22",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "SSH"
+                },
+				 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "22",
+                    "ToPort" : "22",
+                    "CidrIp" : "192.168.42.0/24",
+                    "Description" : "SSH to onprem servers"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "53",
+                    "ToPort" : "53",
+                    "CidrIp" : "192.168.42.0/24",
+                    "Description" : "DNS to onprem servers"
+                },
+				 {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "80",
+                    "ToPort" : "80",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "HTTP to onprem servers"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "80",
+                    "ToPort" : "80",
+                    "CidrIp" : "192.168.42.0/24",
+                    "Description" : "HTTP to onprem servers"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "443",
+                    "ToPort" : "443",
+                    "CidrIp" : "192.168.42.0/24",
+                    "Description" : "Netapp to onprem servers"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "3389",
+                    "ToPort" : "3389",
+                    "CidrIp" : "192.168.42.0/24",
+                    "Description" : "RDP to onprem"
+                }
+            ],
+                "Tags" : [{"Key" : "Name", "Value" : { "Fn::Join" : [ "", [ "A",
+                    { "Ref" : "CountryCode" },
+                    { "Ref" : "RegionCode" },
+                    "GPOPASG" ,
+                    { "Ref" : "Environment" },
+                    "APPCORE"
+                ]]}}]
+            }
+        },
+
+
+        "CORESelfIngress1" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "CORESecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1510",
+                "ToPort": "1530",
+                "Description" : "Oracle Core to Core",
+                "SourceSecurityGroupId": {
+                    "Ref": "CORESecurityGroup"
+                }
+            }
+        },
+
+		 "FECOREIngress" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "CORESecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1510",
+                "ToPort": "1530",
+                "Description" : "Oracle Core to Core",
+                "SourceSecurityGroupId": {
+                    "Ref": "FESecurityGroup"
+                }
+            }
+        },
+
+		"CORESelfIngress2" : {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "CORESecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "443",
+                "ToPort": "443",
+                "Description" : "Oracle Core to Core",
+                "SourceSecurityGroupId": {
+                    "Ref": "CORESecurityGroup"
+                }
+            }
+        },
+
+        "NFSSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupName" : { "Fn::Join" : [ "", [ "A",
+                    { "Ref" : "CountryCode" },
+                    { "Ref" : "RegionCode" },
+                    "GPOASG" ,
+                    { "Ref" : "Environment" },
+                    "APPNFS"
+                ]]},
+                "GroupDescription" : "Netapp security group. Managed by CloudForamtionr",
+                "VpcId" : {"Ref" : "VPCId"},
+                "SecurityGroupIngress" : [
+
+				{
+                    "IpProtocol" : "udp",
+                    "FromPort" : "80",
+                    "ToPort" : "80",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "Netapp Ontap/NFS server ports recommended by Netapp"
+                },
+				{
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "443",
+                    "ToPort" : "443",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "Netapp Ontap/NFS server ports recommended by Netapp"
+                },
+				{
+                    "IpProtocol" : "tcp",
+                    "FromPort" : "22",
+                    "ToPort" : "22",
+                    "CidrIp" : "10.0.0.0/8",
+                    "Description" : "Netapp Ontap/NFS server ports recommended by Netapp"
+                }
+
+				],
+                "SecurityGroupEgress" : [],
+                "Tags" : [{"Key" : "Name", "Value" : { "Fn::Join" : [ "", [ "A",
+                    { "Ref" : "CountryCode" },
+                    { "Ref" : "RegionCode" },
+                    "GPOASG" ,
+                    { "Ref" : "Environment" },
+                    "APPNFS"
+                ]]}}]
+           } }
+		},
+
+    "Outputs" : {
+
+		"FESecurityGroup" : {
+            "Value" : {"Ref" : "FESecurityGroup"},
+            "Export" : {
+             "Name" : "FEAPPSecurityGroup1"
+            }
+        },
+        "BESecurityGroup" : {
+            "Value" : {"Ref" : "BESecurityGroup"},
+            "Export" : {
+             "Name" : "BEAPPSecurityGroup1"
+            }
+        },
+        "CORESecurityGroup" : {
+            "Value" : {"Ref" : "CORESecurityGroup"},
+            "Export" : {
+             "Name" : "COREAPPSecurityGroup1"
+            }
+        },
+		"NFSSecurityGroup" : {
+            "Value" : {"Ref" : "NFSSecurityGroup"},
+            "Export" : {
+             "Name" : "NFSAPPSecurityGroup1"
+            }
+        }
+    }
+
+}
