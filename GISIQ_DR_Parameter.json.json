@@ -1,0 +1,35 @@
+[
+   {
+    "ParameterKey": "Subnet1Cidr",
+    "ParameterValue": "10.23.1.0/24"
+   },
+   {
+    "ParameterKey": "Subnet2Cidr",
+    "ParameterValue": "10.23.2.0/24"
+   },
+   {
+    "ParameterKey": "MyAppVpcCidr",
+    "ParameterValue": "10.23.0.0/16"
+   },
+  {
+    "ParameterKey": "WebserverKeyName1",
+    "ParameterValue": "linux-ppk"
+  },
+  {
+    "ParameterKey": "Subnet1AZs",
+    "ParameterValue" : "us-east-1a"
+  },
+  {
+    "ParameterKey": "Subnet2AZs",
+    "ParameterValue": "us-east-1b"
+  },
+  {
+    "ParameterKey": "WebserverInstanceType",
+    "ParameterValue": "t2.micro"
+  },
+  {
+    "ParameterKey": "WebserverAMIID",
+    "ParameterValue": "ami-04bf6dcdc9ab498ca"
+  }
+
+]

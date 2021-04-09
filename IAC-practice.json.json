@@ -1,0 +1,78 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Metadata": {
+
+    },
+    "Parameters": {
+      "VpcCidr": {
+          "Description": "provide a cidr for VpcCidr",
+          "Type": "String"
+        }
+    },
+    "subnetcidr1": {
+        "Description": "provide cidr for subnetcidr1",
+        "Type": "String"
+    },
+    "subnetcidr2": {
+        "Description": "provide cidr for subnetcidr2",
+        "Type": "String"
+    },
+    "subaz1": {
+        "Description": "select an az for subaz1",
+        "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "subaz2": {
+        "Description": "select an az for subaz2",
+        "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {"MyAppVpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": { "Ref": "VpcCidr" },
+        "Tags": [{ "Key": "Name", "Value":  "MyAppVpc" }]
+      }
+    },
+    "MyAppIgw": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [{ "Key": "Name", "Value":  "MyAppIgw" }]
+      }
+    },
+    "AttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": { "Ref": "MyAppVpc" },
+        "InternetGatewayId": { "Ref": "MyAppIgw" }
+      }
+    },
+    "privatesubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "subaz1" },
+        "VpcId": { "Ref": "MyAppVpc" },
+        "CidrBlock": { "Ref": "subnetcidr1" },
+        "Tags": [{ "Key": "Name", "Value":  "privatesubnet" }]
+      }
+    },
+    "publicsubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Ref": "subaz2" },
+        "VpcId": { "Ref": "MyAppVpc" },
+        "CidrBlock": { "Ref": "subnetcidr1" },
+        "Tags": [{ "Key": "Name", "Value":  "publicsubnet" }]
+      }
+    }
+
+    },
+    "Outputs": {
+
+    }
+}

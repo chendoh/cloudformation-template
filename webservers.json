@@ -1,0 +1,167 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "",
+  "Metadata": {},
+  "Parameters": {
+    "Subnet1": {
+      "Description": "Choose Cidr for Subnet1",
+      "Type": "String"
+    },
+    "Subnet2": {
+      "Description": "Choose AZ for Subnet1",
+      "Type": "String"
+    },
+    "WebserverKeyName": {
+      "Description": "Choose Key Name",
+      "Type": "String"
+    },
+    "WebserverInstanceType": {
+      "Description": "Choose Instance Type",
+      "Type": "String",
+      "AllowedValues": [
+        "t2.micro",
+        "t2.nano",
+        "t2.small"
+      ]
+    },
+    "WebserverAMIID": {
+      "Description": "Add AMI for webserver",
+      "Type": "String"
+    }
+  },
+  "Mappings": {},
+  "Conditions": {},
+  "Resources": {
+    "Webserver1": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "packages": {
+              "yum": {
+                "httpd": []
+              }
+            },
+            "groups": {},
+            "users": {},
+            "sources": {},
+            "files": {
+              "/var/www/html/index.html": {
+                "content": "<h1>Deployed by CloudFormation</h1>"
+              }
+            },
+            "commands": {},
+            "services": {
+              "sysvinit": {
+                "httpd": {
+                  "enabled": "true",
+                  "ensureRunning": "true"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "KeyName": {
+          "Ref": "WebserverKeyName"
+        },
+        "SubnetId": {
+          "Ref": "Subnet1"
+        },
+        "ImageId": {
+          "Ref": "WebserverAMIID"
+        },
+        "InstanceType": {
+          "Ref": "WebserverInstanceType"
+        },
+        "Monitoring": "false",
+        "SecurityGroupIds": [
+          {
+            "Fn::ImportValue": "FEAPPSecurityGroup1"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Webserver1"
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "# Install the files and packages from the metadata\n",
+                "/opt/aws/bin/cfn-init -v ",
+                "         --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "         --resource Webserver1 ",
+                "         --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "Webserver2": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "KeyName": {
+          "Ref": "WebserverKeyName"
+        },
+        "SubnetId": {
+          "Ref": "Subnet2"
+        },
+        "ImageId": {
+          "Ref": "WebserverAMIID"
+        },
+        "InstanceType": {
+          "Ref": "WebserverInstanceType"
+        },
+        "Monitoring": "false",
+        "SecurityGroupIds": [
+          {
+            "Fn::ImportValue": "FEAPPSecurityGroup1"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Webserver2"
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "# Install the files and packages from the metadata\n",
+                "/opt/aws/bin/cfn-init -v ",
+                "         --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "         --resource Webserver1 ",
+                "         --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {}
+}
